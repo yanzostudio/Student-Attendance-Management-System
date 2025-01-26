@@ -1,12 +1,13 @@
 <?php
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "sams_db";//database name
+    $servername = "localhost/XE";
+    $username = "dbSams";  // Oracle DB username
+    $password = "system";  // Oracle DB password
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+    // Connect to Oracle Database
+    $conn = oci_connect($username, $password, $servername);
+    if (!$conn) {
+        $e = oci_error();
+        die("Connection failed: " . $e['message']);
+    }
 ?>

@@ -49,17 +49,18 @@
         </form>
     </div>
 </div>
- 
+
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $servername = "localhost";
-    $username = "root";
-    $password = "";
-    $dbname = "sams_db"; // Database name
+    $servername = "localhost/XE";
+    $username = "dbSams";  // Oracle DB username
+    $password = "system";  // Oracle DB password
 
-    $conn = new mysqli($servername, $username, $password, $dbname);
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
+    // Connect to Oracle Database
+    $conn = oci_connect($username, $password, $servername);
+    if (!$conn) {
+        $e = oci_error();
+        die("Connection failed: " . $e['message']);
     }
 
     if (!empty($_POST['username']) && !empty($_POST['password'])) {
@@ -69,32 +70,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Query the appropriate table based on user type
         if ($type == "student") {
-            $stmt = $conn->prepare("SELECT * FROM student WHERE username = ?");
+            $query = "SELECT * FROM students WHERE STUDENT_NAME = :username";
         } else if ($type == "teacher") {
-            $stmt = $conn->prepare("SELECT * FROM teacher WHERE username = ?");
+            $query = "SELECT * FROM teacher WHERE username = :username";
         } else if ($type == "admin") {
-            $stmt = $conn->prepare("SELECT * FROM admins WHERE username = ?");
+            $query = "SELECT * FROM admins WHERE username = :username";
         }
 
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $stmt = oci_parse($conn, $query);
+        oci_bind_by_name($stmt, ":username", $username);
+        oci_execute($stmt);
 
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            // Verify the entered password with the hashed password
-            if (password_verify($password, $row['password'])) {
+        $row = oci_fetch_assoc($stmt);
+        if ($row) {
+            // Direct password comparison (no hashing involved)
+            if ($password == $row['STUDENT_PASSWORD']) {
                 session_start();
                 if ($type == "student") {
-                    $_SESSION['studentID'] = $row['StudentID'];
+                    $_SESSION['studentID'] = $row['STUDENT_ID'];
                     header('Location: dashboard-student.php');
                     exit();
                 } else if ($type == "teacher") {
-                    $_SESSION['teacherID'] = $row['TeacherID'];
+                    $_SESSION['teacherID'] = $row['TEACHERID'];
                     header('Location: dashboard-teacher.php');
                     exit();
                 } else if ($type == "admin") {
-                    $_SESSION['AdminID'] = $row['AdminID'];
+                    $_SESSION['AdminID'] = $row['ADMINID'];
                     header('Location: dashboard-admin.php');
                     exit();
                 }
@@ -105,9 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo "<script>alert('Invalid username.');</script>";
         }
 
-        $stmt->close();
+        oci_free_statement($stmt);
     }
-    $conn->close();
+    oci_close($conn);
 }
 ?>
 
