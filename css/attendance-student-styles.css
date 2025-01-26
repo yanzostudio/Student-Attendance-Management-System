@@ -1,0 +1,275 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+*{
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    display: flex;
+}
+
+.sidebar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 115px;
+    height: 100vh;
+    padding: 0 1.7rem;
+    color: #fff;
+    overflow: hidden;
+    transition: all 0.5s;
+    background:  rgb(234, 209, 166);
+}
+
+.sidebar:hover{
+    width:300px;
+    transition: 0.5s;
+}
+.logo{
+    height: 80px;
+    padding: 16px;
+}
+
+.menu{
+    height: 88%;
+    position: relative;
+    list-style: none;
+    padding: 0;
+
+}
+
+.menu li{
+    padding: 1rem;
+    margin: 8px 0;
+    border-radius: 8px;
+    transition: all 0.5s ease-in-out;
+}
+
+.menu li:hover, .active{
+    background: #56404058;
+}
+
+.menu a {
+    color:white;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.menu a span {
+    overflow: hidden;
+}
+
+.menu a i {
+    font-size: 1.2rem;
+}
+
+.logout{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+.main-content {
+    position: relative;
+    background: #ebe9e9;
+    width: 100%;
+    padding: 1rem;
+}
+
+.header-wrapper img {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.header-wrapper{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 2rem;
+    margin-bottom: 1rem;
+}
+
+.header-title {
+    color:  rgb(234, 209, 166);
+
+}
+
+.main-title {
+    color:  rgb(234, 209, 166);
+    padding-bottom: 10px;
+    font-size:15px;
+}
+
+.tabular-wrapper {
+    background: #fff;
+    margin-top: 1rem;
+    border-radius: 10px;
+    padding: 2rem;
+}
+
+.table-container{
+    width: 100%;
+}
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background:  rgb(234, 209, 166);
+    color: #fff;
+}
+
+th {
+    padding: 15px;
+    text-align: left;
+}
+
+tbody{
+    background: #f2f2f2;
+}
+
+td{
+    padding: 15px;
+    font-size: 14px;
+    color: #333;
+}
+
+.popup-container {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+}
+
+.success-icon {
+    color: green;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+
+
+/* Ensure the cursor becomes a pointer on hover for both the span and the icon */
+.facial-scan {
+    z-index: 1000;
+    cursor: pointer;
+}
+
+.facial-scan:active {
+    background-color: #333;
+    color: #fff;
+}
+
+
+.facial-scan i {
+    cursor: pointer;
+}
+
+
+
+tr:nth-child(even){
+    background: #fff;
+}
+
+tfoot{
+    background: rgba(113 ,99 ,186 ,255);
+    font-weight: bold;
+    color: #fff;
+}
+
+tfoot td{
+    padding: 15px;
+}
+
+.table-container button {
+    color: green;
+    background: none;
+    cursor:pointer;
+}
+
+.popup-container {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Black with opacity */
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 50%;
+    text-align: center;
+}
+
+.close-btn {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+

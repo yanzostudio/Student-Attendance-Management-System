@@ -1,0 +1,189 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+*{
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    display: flex;
+}
+
+.sidebar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 115px;
+    height: 100vh;
+    padding: 0 1.7rem;
+    color: #fff;
+    overflow: hidden;
+    transition: all 0.5s;
+    background: rgb(198, 115, 159);
+}
+
+.sidebar:hover{
+    width:300px;
+    transition: 0.5s;
+}
+.logo{
+    height: 80px;
+    padding: 16px;
+}
+
+.menu{
+    height: 88%;
+    position: relative;
+    list-style: none;
+    padding: 0;
+
+}
+
+.menu li{
+    padding: 1rem;
+    margin: 8px 0;
+    border-radius: 8px;
+    transition: all 0.5s ease-in-out;
+}
+
+.menu li:hover, .active{
+    background:  #e0e0e058;
+}
+
+.menu a {
+    color:black;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.menu a span {
+    overflow: hidden;
+}
+
+.menu a i {
+    font-size: 1.2rem;
+}
+
+.logout{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Main Content Styling */
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    background: #f9f9fc;
+}
+
+.header-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.header-title span {
+    font-size: 0.9rem;
+    color: black;
+}
+
+.header-title h2 {
+    font-size: 1.5rem;
+    color: black;
+    font-weight: 600;
+}
+
+.header-wrapper img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+
+.main-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.course-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.course-btn {
+    padding: 0.8rem 1.5rem;
+    background: #7163ba;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+.course-btn:hover {
+    background: #5c4db2;
+    transform: translateY(-2px);
+}
+
+
+.button-group {
+    display: flex;
+    gap: 0.8rem; /* Adjusted gap for smaller buttons */
+    margin-top: 2rem;
+}
+
+.add-course-btn {
+    margin-top: 2rem; /* Increased space above Add Course button */
+    padding: 0.5rem 1rem;
+    background: rgb(198, 115, 159); 
+    color: white;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+
+.add-course-btn:hover {
+    background: rgb(106, 49, 79); ; /* Darker grey on hover */
+    transform: translateY(-1px); /* Subtle hover effect */
+}
+
+.add-course-container {
+    margin-top: 2rem; /* Space between the course buttons and Add Course button */
+}
+
+
+
+

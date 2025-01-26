@@ -1,0 +1,238 @@
+/* Import Google Font cdn link */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+*{
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+body {
+    display: flex;
+}
+.sidebar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 110px;
+    height: 100vh;
+    padding: 0 1.7rem;
+    color: #fff;
+    overflow: hidden;
+    transition: all 0.5s linear;
+    background-color: rgba(71, 192, 255, 0.8);
+}
+.sidebar:hover {
+    width: 260px;
+    transition: 0.5s;
+}
+.logo {
+    height: 80px;
+    padding: 16px; 
+}
+.menu {
+  height: 88%;
+  position: relative;
+  list-style: none;
+  padding: 0;
+}
+.menu li {
+    padding: 1rem;
+    margin: 8px 0;
+    border-radius: 8px;
+    transition: all 0.5s ease-in-out;
+}
+.menu li:hover, 
+.active {
+  background: #f1d79e58;
+}
+.menu a {
+    color: white;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+.menu a span {
+    overflow: hidden;
+}
+.menu a i {
+    font-size: 1.2rem;
+}
+.logout {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* **** main body section ****  */
+.main--content {
+    position: relative;
+    background: #ebe9e9;
+    width: 100%;
+    padding: 1rem;  
+}
+
+.header--wrapper img {
+  width: 50px;  
+  height: 50px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.header--wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 2rem;
+    margin-bottom: 1rem;
+}
+.header--title {
+    color: rgba(71, 192, 255, 0.8);
+}
+.user--info {
+   display: flex; 
+   align-items: center;
+   gap: 1rem;
+}
+
+/* Content Sections */
+.content {
+    display: flex;
+    gap: 0.5em; /* Space between Teacher-Student section and Register form */
+}
+
+.teacher-student-wrapper {
+    flex: 2; /* Occupies most of the space */
+    display: flex;
+    flex-direction: column; /* Stack Teacher and Student vertically */
+    gap: 0.5em; /* Space between Teacher and Student tables */
+}
+
+.register-wrapper {
+    flex: 1; /* Smaller width for Register form */
+    background-color: #fff;
+    padding: 1em;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.teacher-list,
+.student-list {
+    background-color: #fff;
+    padding: 1em;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.teacher-list h2,
+.student-list h2,
+.register-wrapper h2 {
+    margin-top: 0;
+    margin-bottom: 1em;
+    color: rgba(71, 192, 255, 0.8);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+}
+
+.table th,
+.table td {
+    padding: 0.5em;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.btn-view-all {
+    background-color: #007bff;
+    color: #fff;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+    margin-bottom: 1em;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 0.5em 1em;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 1em;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.5em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.btn-submit {
+    background-color: #007bff;
+    color: #fff;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    border-radius: 8px;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    min-width: 170px;
+}
+
+.dropdown-menu li {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    transition: background 0.3s ease-in-out;
+}
+
+.dropdown-menu li:hover {
+    background: rgba(71, 192, 255, 0.8);
+}
+
+.dropdown-menu li a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}

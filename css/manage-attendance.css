@@ -1,0 +1,245 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    display: flex;
+    background-color: #f4f7fc;
+}
+
+.sidebar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 115px;
+    height: 100vh;
+    padding: 0 1.7rem;
+    color: #fff;
+    overflow: hidden;
+    transition: all 0.5s;
+    background: rgb(198, 115, 159);
+}
+
+.sidebar:hover {
+    width: 300px;
+    transition: 0.5s;
+}
+
+.logo {
+    height: 80px;
+    padding: 16px;
+}
+
+.menu {
+    height: 88%;
+    position: relative;
+    list-style: none;
+    padding: 0;
+}
+
+.menu li {
+    padding: 1rem;
+    margin: 8px 0;
+    border-radius: 8px;
+    transition: all 0.5s ease-in-out;
+}
+
+.menu li:hover, .active {
+    background: #e0e0e058;
+}
+
+.menu a {
+    color: black;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.menu a span {
+    overflow: hidden;
+}
+
+.menu a i {
+    font-size: 1.2rem;
+}
+
+.logout {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Main Content Styling */
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    background: #f9f9fc;
+}
+
+.header-wrapper img {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.header-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-course-container {
+    margin-bottom: 20px;
+}
+
+.add-course-container a {
+    background-color: #e74c3c;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-align: center;
+    display: inline-block;
+    transition: background-color 0.3s;
+}
+
+.add-course-container a:hover {
+    background-color: #c0392b;
+}
+
+/* Form Styles */
+form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+form input,
+form select,
+form button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+form input[type="date"] {
+    width: auto;
+}
+
+form button {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+form button:hover {
+    background-color: #27ae60;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+table th,
+table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f1f1f1;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+table td input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 10px;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding-top: 10px;
+    }
+
+    .sidebar a {
+        padding: 15px;
+        text-align: center;
+    }
+
+    /* Header Container */
+    .header-container {
+    width: 100%;
+    background-color: #fff;
+    padding: 20px 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+   /* Header Wrapper */
+.header-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Header Title */
+.header-title {
+    font-size: 2rem;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.header-wrapper img {
+    height: 80px;
+    object-fit: contain;
+}
+
+    .add-course-container a {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}

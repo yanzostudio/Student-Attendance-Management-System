@@ -1,0 +1,314 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 115px;
+    height: 100vh;
+    padding: 0 1.7rem;
+    color: #fff;
+    overflow: hidden;
+    transition: all 0.5s;
+    background: rgba(71, 192, 255, 0.8);
+}
+
+.sidebar:hover {
+    width: 300px;
+    transition: 0.5s;
+}
+
+.logo {
+    height: 80px;
+    padding: 16px;
+}
+
+.menu {
+    height: 88%;
+    position: relative;
+    list-style: none;
+    padding: 0;
+}
+
+.menu li {
+    padding: 1rem;
+    margin: 8px 0;
+    border-radius: 8px;
+    transition: all 0.5s ease-in-out;
+}
+
+.menu li:hover, .menu .active {
+    background: #e0e0e058;
+}
+
+.menu a {
+    color: white;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+.menu a span {
+    overflow: hidden;
+}
+.menu a i {
+    font-size: 1.2rem;
+}
+
+.logout {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Main Content */
+.main-content {
+    background: #ebe9e9;
+    width: 100%;
+    padding: 1rem;
+}
+
+/* Header */
+.header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 2rem;
+    margin-bottom: 1rem;
+}
+
+.header-wrapper img {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.header-title {
+    color: rgba(71, 192, 255, 0.8);
+}
+
+.main-title {
+    color: rgba(71, 192, 255, 0.8);
+    padding-bottom: 10px;
+    font-size: 15px;
+}
+
+/* Dropdown */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    list-style: none;
+    padding: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    border-radius: 8px;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    min-width: 170px;
+}
+
+.dropdown-menu li {
+    padding: 0.5rem 1rem;
+    transition: background 0.3s ease-in-out;
+}
+
+.dropdown-menu li:hover {
+    background: rgba(71, 192, 255, 0.8);
+}
+
+.dropdown-menu li a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+/* Wrapper */
+.wrapper {
+    background: #fff;
+    margin-top: 1rem;
+    border-radius: 10px;
+    padding: 2rem;
+}
+
+/* Table */
+#course-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+#course-table th, #course-table td {
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+}
+
+#course-table th {
+    background: rgba(71, 192, 255, 0.8);
+    color: #fff;
+    text-align: center;
+}
+
+#course-table td {
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Buttons in Table */
+td > button {
+    display: inline-block;
+    padding: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+td > button:last-child {
+    margin-right: 0;
+}
+
+td > button i {
+    font-size: 0.9rem;
+}
+
+/* Edit Button */
+.edit-button {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.edit-button:hover {
+    background-color: #0056b3;
+}
+
+/* Delete Button */
+.delete-button {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.delete-button:hover {
+    background-color: #b02a37;
+}
+
+/* Course Form */
+.course-form {
+    flex: 1;
+    background: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.course-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.course-form label {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(71, 192, 255, 0.8);
+}
+
+.course-form input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.course-form input:focus {
+    border-color: rgba(71, 192, 255, 0.8);
+    box-shadow: 0 0 5px rgba(71, 192, 255, 0.5);
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(71, 192, 255, 0.8);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+.btn-submit:hover {
+    background: rgba(71, 192, 255, 1);
+}
+
+/* Flexbox for Content Wrapper */
+.content-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.table-container {
+    flex: 3;
+    margin-right: 1rem;
+}
+
+/* Notification */
+.notification {
+    display: none;
+    margin: 1rem auto;
+    padding: 1rem;
+    background-color: rgba(71, 192, 255, 0.2);
+    color: rgba(71, 192, 255, 1);
+    border: 1px solid rgba(71, 192, 255, 1);
+    border-radius: 4px;
+    text-align: center;
+    width: 80%;
+}
+
+.dropdown-menu li {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    transition: background 0.3s ease-in-out;
+}
+
+.dropdown-menu li:hover {
+    background: rgba(71, 192, 255, 0.8);
+}
+
+.dropdown-menu li a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
