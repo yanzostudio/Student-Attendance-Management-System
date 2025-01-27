@@ -11,35 +11,6 @@ if (!isset($_SESSION['teacherID'])) {
 $teacherID = $_SESSION['teacherID'];
 $successMessage = '';
 
-// Handle deletion if the delete action is triggered
-if (isset($_GET['delete']) && isset($_GET['classID'])) {
-    $classID = $_GET['classID']; // Sanitize input
-
-    // Check if the class belongs to the teacher
-    $checkQuery = "SELECT * FROM CLASSES WHERE CLASS_ID = :classID AND TEACHER_ID = :teacherID";
-    $stmt = oci_parse($conn, $checkQuery);
-    oci_bind_by_name($stmt, ":classID", $classID);
-    oci_bind_by_name($stmt, ":teacherID", $teacherID);
-    oci_execute($stmt);
-
-    if ($row = oci_fetch_assoc($stmt)) {
-        // Proceed with deletion
-        $deleteQuery = "DELETE FROM CLASSES WHERE CLASS_ID = :classID";
-        $deleteStmt = oci_parse($conn, $deleteQuery);
-        oci_bind_by_name($deleteStmt, ":classID", $classID);
-
-        if (oci_execute($deleteStmt)) {
-            $successMessage = "Class deleted successfully.";
-        } else {
-            $successMessage = "Error deleting class.";
-        }
-        oci_free_statement($deleteStmt);
-    } else {
-        $successMessage = "Unauthorized action.";
-    }
-
-    oci_free_statement($stmt);
-}
 
 // Query to fetch classes for the logged-in teacher
 $sql = "SELECT CLASS_ID, CLASS_NAME FROM CLASSES WHERE TEACHER_ID = :teacherID ORDER BY CLASS_ID DESC";
