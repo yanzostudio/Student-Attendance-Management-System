@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Check if there are students enrolled in this class
     if (count($students) > 0) {
-        $attendanceQuery = "INSERT INTO ATTENDANCE (CLASS_ID, STUDENT_ID, ATTENDANCE_TIME, ATTENDED) VALUES (:classID, :studentID, TO_DATE(:dateTime, 'YYYY-MM-DD\"T\"HH24:MI'), 'Y')";
+        $attendanceQuery = "INSERT INTO ATTENDANCE (CLASS_ID, STUDENT_ID, ATTENDANCE_TIME, ATTENDED) VALUES (:classID, :studentID, TO_DATE(:dateTime, 'YYYY-MM-DD\"T\"HH24:MI'), 'N')";
         $attendanceStmt = oci_parse($conn, $attendanceQuery);
 
         foreach ($students as $studentID) {

@@ -21,26 +21,21 @@ while ($row = oci_fetch_assoc($classStmt)) {
 }
 oci_free_statement($classStmt);
 
-// Delete specific attendance record
-if (isset($_GET['delete']) && isset($_GET['studentID']) && isset($_GET['classid']) && isset($_GET['dateTime'])) {
-    $studentID = $_GET['studentID'];
-    $classID = $_GET['classid'];
-    $dateTime = $_GET['dateTime'];
+// Delete all attendance for a specific date and class
+if (isset($_POST['deleteAll']) && !empty($_POST['classid']) && !empty($_POST['dateTime'])) {
+    $classID = $_POST['classid'];
+    $dateTime = $_POST['dateTime'];
 
-    $deleteQuery = "
+    $deleteAllQuery = "
         DELETE FROM ATTENDANCE 
-        WHERE STUDENT_ID = :studentID 
-          AND CLASS_ID = :classID 
+        WHERE CLASS_ID = :classID 
           AND ATTENDANCE_TIME = TO_DATE(:dateTime, 'YYYY-MM-DD')";
-    $deleteStmt = oci_parse($conn, $deleteQuery);
-    oci_bind_by_name($deleteStmt, ":studentID", $studentID);
-    oci_bind_by_name($deleteStmt, ":classID", $classID);
-    oci_bind_by_name($deleteStmt, ":dateTime", $dateTime);
-    oci_execute($deleteStmt);
+    $deleteAllStmt = oci_parse($conn, $deleteAllQuery);
+    oci_bind_by_name($deleteAllStmt, ":classID", $classID);
+    oci_bind_by_name($deleteAllStmt, ":dateTime", $dateTime);
+    oci_execute($deleteAllStmt);
 
-    echo "<script>alert('Attendance record deleted successfully!');</script>";
-    header("Location: manage-attendance.php?classid=$classID&dateTime=$dateTime");
-    exit();
+    echo "<script>alert('All attendance records for the selected date and class have been deleted successfully!');</script>";
 }
 
 // Fetch attendance if class and date are selected
@@ -50,10 +45,17 @@ if (!empty($_GET['classid']) && !empty($_GET['dateTime'])) {
     $dateTime = $_GET['dateTime'];
 
     $attendanceQuery = "
-        SELECT a.ATTENDANCE_TIME, a.STUDENT_ID, s.STUDENT_NAME
-        FROM ATTENDANCE a
-        JOIN STUDENTS s ON a.STUDENT_ID = s.STUDENT_ID
-        WHERE a.CLASS_ID = :classID AND a.ATTENDANCE_TIME = TO_DATE(:dateTime, 'YYYY-MM-DD')";
+        SELECT s.STUDENT_ID, s.STUDENT_NAME, 
+               NVL(TO_CHAR(a.ATTENDANCE_TIME, 'YYYY-MM-DD'), 'N/A') AS ATTENDANCE_TIME,
+               CASE WHEN a.ATTENDED = 'Y' THEN 'Yes' ELSE 'No' END AS ATTENDED
+        FROM STUDENTS s
+        LEFT JOIN ATTENDANCE a ON s.STUDENT_ID = a.STUDENT_ID 
+                              AND a.CLASS_ID = :classID 
+                              AND a.ATTENDANCE_TIME = TO_DATE(:dateTime, 'YYYY-MM-DD')
+        WHERE s.STUDENT_ID IN (
+            SELECT STUDENT_ID FROM ENROLLS WHERE CLASS_ID = :classID
+        )
+        ORDER BY s.STUDENT_ID";
     $stmt = oci_parse($conn, $attendanceQuery);
     oci_bind_by_name($stmt, ":classID", $classID);
     oci_bind_by_name($stmt, ":dateTime", $dateTime);
@@ -107,13 +109,19 @@ if (!empty($_GET['classid']) && !empty($_GET['dateTime'])) {
         </form>
 
         <?php if (!empty($attendances)): ?>
+            <form method="POST" action="manage-attendance.php">
+                <input type="hidden" name="classid" value="<?= htmlspecialchars($_GET['classid']) ?>">
+                <input type="hidden" name="dateTime" value="<?= htmlspecialchars($_GET['dateTime']) ?>">
+                <button type="submit" name="deleteAll" class="delete-all-button" onclick="return confirm('Are you sure you want to delete all attendance records for this class and date?')">Delete Attendance</button>
+            </form>
+
             <table>
                 <thead>
                     <tr>
                         <th>Student ID</th>
                         <th>Student Name</th>
                         <th>Attendance Time</th>
-                        <th>Action</th>
+                        <th>Attended</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -122,13 +130,7 @@ if (!empty($_GET['classid']) && !empty($_GET['dateTime'])) {
                             <td><?= htmlspecialchars($attendance['STUDENT_ID']) ?></td>
                             <td><?= htmlspecialchars($attendance['STUDENT_NAME']) ?></td>
                             <td><?= htmlspecialchars($attendance['ATTENDANCE_TIME']) ?></td>
-                            <td>
-                                <a href="manage-attendance.php?delete=true&studentID=<?= htmlspecialchars($attendance['STUDENT_ID']) ?>&classid=<?= htmlspecialchars($_GET['classid']) ?>&dateTime=<?= htmlspecialchars($_GET['dateTime']) ?>" 
-                                   onclick="return confirm('Are you sure you want to delete this attendance record?')" 
-                                   class="add-attendance-button">
-                                   Delete
-                                </a>
-                            </td>
+                            <td><?= htmlspecialchars($attendance['ATTENDED']) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
