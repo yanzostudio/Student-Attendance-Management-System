@@ -1,102 +1,60 @@
 <?php
+require 'db_config.php';
 
-    
-    $servername = "localhost";
-    $username = "root";
-    $password = "";
-    $dbname = "sams_db"; // Database name
-    //include("db_config.php");    
-
-    // Database connection
-    $conn = new mysqli($servername, $username, $password, $dbname);
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-    // $sqlStud = "SELECT * FROM student ORDER BY StudentID DESC LIMIT 2";
-    // $resultStud = $conn->query($sqlStud);
-
-    // $sqlTeach = "SELECT * FROM teacher ORDER BY teacherID DESC LIMIT 2";
-    // $resultTeach = $conn->query($sqlTeach);
-
-    $limit = 4; // Number of rows to fetch
-    $sqlStud = "SELECT * FROM student ORDER BY StudentID DESC LIMIT ?";
-    $stmtStud = $conn->prepare($sqlStud);
-    $stmtStud->bind_param("i", $limit);
-    $stmtStud->execute();
-    $resultStud = $stmtStud->get_result();
-
-    $sqlTeach = "SELECT * FROM teacher ORDER BY teacherID DESC LIMIT ?";
-    $stmtTeach = $conn->prepare($sqlTeach);
-    $stmtTeach->bind_param("i", $limit);
-    $stmtTeach->execute();
-    $resultTeach = $stmtTeach->get_result();
-
-
+    $limit = 10; // Number of rows to fetch
+    $sqlStud = "SELECT * FROM (SELECT * FROM students ORDER BY Student_ID DESC) WHERE ROWNUM <= :limit";
+    $stmtStud = oci_parse($conn, $sqlStud);
+    oci_bind_by_name($stmtStud, ":limit", $limit);
+    oci_execute($stmtStud);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
-        if($_POST['type']=="student"){
-            if (!empty($_POST['name']) && !empty($_POST['susername']) && !empty($_POST['password']) && !empty($_POST['Email']) && isset($_POST['Status'])) {
+        if ($_POST['type'] == "student") {
+            if (!empty($_POST['Email']) && !empty($_POST['password'])) {
                 $name = $_POST['name'];
-                $susername = $_POST['susername'];
-                $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+                $contactNo = $_POST['contactNo'];
+                $password = $_POST['password'];
                 $Email = $_POST['Email'];
-                $Status = $_POST['Status'];
-
+                $dob = $_POST['dob'];  // This is in 'YYYY-MM-DD' format from the <input type="date"> field
+                $gender = $_POST['gender'];
+    
                 // Prepare SQL query using placeholders
-                $stmt = $conn->prepare("INSERT INTO student (name, username, password, Email, Status) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssi", $name , $susername, $password, $Email, $Status); 
-
+                // Convert 'YYYY-MM-DD' to the appropriate Oracle Date format
+                $stmt = oci_parse($conn, "INSERT INTO students (student_name, student_email, student_password, student_contactNo, student_DATEOFBIRTH, student_gender) 
+                                          VALUES (:name, :Email, :password, :contactNo, TO_DATE(:dob, 'YYYY-MM-DD'), :gender)");
+                
+                // Bind the values
+                oci_bind_by_name($stmt, ":name", $name);
+                oci_bind_by_name($stmt, ":Email", $Email);
+                oci_bind_by_name($stmt, ":password", $password);
+                oci_bind_by_name($stmt, ":contactNo", $contactNo);
+                oci_bind_by_name($stmt, ":dob", $dob); // Directly bind the date in 'YYYY-MM-DD' format
+                oci_bind_by_name($stmt, ":gender", $gender);
+    
                 // Execute prepared statement
-                if ($stmt->execute()) {
+                if (oci_execute($stmt)) {
                     header('Location: registeruser-admin.php');
                     exit;
                 } else {
-                    echo "Error: " . $stmt->error;
+                    $e = oci_error($stmt);
+                    echo "Error: " . $e['message'];
                 }
-
-                // Close statement and connection
-                $stmt->close();
+    
+                // Close statement
+                oci_free_statement($stmt);
             }
         }
-        else if($_POST['type']=="teacher"){
-            if (!empty($_POST['name']) && !empty($_POST['susername']) && !empty($_POST['password']) && !empty($_POST['Email']) && isset($_POST['Status']) && !empty($_POST['phoneNo'])) {
-                $name = $_POST['name'];
-                $susername = $_POST['susername'];
-                $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-                $Email = $_POST['Email'];
-                $Status = $_POST['Status'];
-                $phoneNo = $_POST['phoneNo'];
-
-                // Prepare SQL query using placeholders
-                $stmt = $conn->prepare("INSERT INTO teacher (name, username, password, Email, Status, phoneNo) VALUES (?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssssi", $name, $susername, $password, $Email, $Status, $phoneNo);
-
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-
-                // Execute prepared statement
-                if ($stmt->execute()) {
-                    header('Location: registeruser-admin.php');
-                    exit;
-                } else {
-                    echo "Error: " . $stmt->error;
-                }
-
-                // Close statement and connection
-                $stmt->close();
-            }
-        }
-
-        $conn->close();
+        oci_close($conn); // Close connection
     }
+    
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register User Page</title>
+    <title>Register Student Page</title>
     <link rel="stylesheet" href="css/regUser-admin-styles.css">
     <!--Font Awesome Cdn link-->
     <link
@@ -113,7 +71,7 @@
         <div class="header--wrapper">
             <div class="header--title">
                 <span>Admin</span>
-                <h2>Register User</h2>
+                <h2>Register Student</h2>
             </div>
             <div class="user--info">
                 <img src="images/manager.png">
@@ -123,40 +81,6 @@
         <div class="content">
             <!-- Teacher and Student Tables -->
             <div class="teacher-student-wrapper">
-                <!-- Teacher Section -->
-                <section class="teacher-list">
-                    <h2>Teachers</h2>
-                    <a href="admin-manage-teacher.php">View All</a>
-                    <table class="table" id="studentTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Username</th>
-                            <th>Teacher ID</th>
-                            <th>Email</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        if ($resultTeach->num_rows > 0) {
-                           while($row = $resultTeach->fetch_assoc()) {
-                                echo "<tr>";
-                                echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                                echo "<td>" . htmlspecialchars($row['username']) . "</td>";
-                                echo "<td>" . htmlspecialchars($row['TeacherID']) . "</td>"; 
-                                echo "<td>" . htmlspecialchars($row['Email']) . "</td>"; 
-                                echo "<td>" . "<a href='view-teacher-admin.php?TeacherID=" . $row['TeacherID'] . "'>View</a>" . "</td>";
-                                echo "</tr>";
-                            }
-                        } else {
-                            echo "<tr><td colspan='4'>No records found</td></tr>";
-                        }
-                        ?>
-                    </tbody>
-                </table>
-                </section>
-        
                 <!-- Student Section -->
                 <section class="student-list">
                     <h2>Students</h2>
@@ -165,7 +89,7 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Username</th>
+                            <th>contactNo</th>
                             <th>Student ID</th>
                             <th>Email</th>
                             <th>Action</th>
@@ -173,21 +97,15 @@
                     </thead>
                     <tbody>
                         <?php
-                        if ($resultStud->num_rows > 0) {
-                           while($row = $resultStud->fetch_assoc()) {
-                                echo "<tr>";
-                                echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                                echo "<td>" . htmlspecialchars($row['username']) . "</td>";
-                                echo "<td>" . htmlspecialchars($row['StudentID']) . "</td>"; 
-                                echo "<td>" . htmlspecialchars($row['Email']) . "</td>"; 
-                                echo "<td>" . "<a href='view-student-admin.php?StudentID=" . $row['StudentID'] . "'>View</a>" . "</td>";
-                                echo "</tr>";
-                            }
-                        } else {
-                            echo "<tr><td colspan='4'>No records found</td></tr>";
+                        while ($row = oci_fetch_assoc($stmtStud)) {
+                            echo "<tr>";
+                            echo "<td>" . htmlspecialchars($row['STUDENT_NAME']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['STUDENT_CONTACTNO']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['STUDENT_ID']) . "</td>"; 
+                            echo "<td>" . htmlspecialchars($row['STUDENT_EMAIL']) . "</td>"; 
+                            echo "<td>" . "<a href='view-student-admin.php?Student_ID=" . $row['STUDENT_ID'] . "'>View</a>" . "</td>";
+                            echo "</tr>";
                         }
-
-                        $conn->close();
                         ?>
                     </tbody>
                 </table>
@@ -196,21 +114,15 @@
 
             <!-- Register Form -->
             <div class="register-wrapper">
-                <h2>Register User</h2>
+                <h2>Register Student</h2>
                 <form action="registeruser-admin.php" method="POST">
                     <div>
                     <input type="radio" id="Student" name="type" value="student" required>
                     <label for="Student">Student</label>
-                    <input type="radio" id="Teacher" name="type" value="teacher" required>
-                    <label for="Teacher">Teacher</label>
                     </div>
                     <div class="form-group">
                         <label >Name</label>
                         <input type="text"  name="name" required/>
-                    </div>
-                    <div class="form-group">
-                        <label >Username</label>
-                        <input type="text"  name="susername" required/>
                     </div>
                     <div class="form-group">
                         <label >Password</label>
@@ -221,15 +133,18 @@
                         <input type="Email"  name="Email" required />
                     </div>
                     <div class="form-group">
-                        <label>Phone No</label>
-                        <input type="tel"  name="phoneNo"/>
+                        <label>Contact No</label>
+                        <input type="tel"  name="contactNo"/>
                     </div>
                     <div class="form-group">
-                        <label>Status</label>
-                        <select name="Status">
-                            <option value="0" name="Status">Inactive</option>
-                            <option value="1" name="Status">Active</option>
-                        </select>
+                        <label>DOB</label>
+                        <input type="date"  name="dob"/>
+                    </div>
+                    <div class="form-group">
+                    <label for="gender">Gender:</label>
+                    <select name="gender" id="gender">
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>   </select>
                     </div>
                     <div class="form-group">
                     <input type="submit" value="Add User">

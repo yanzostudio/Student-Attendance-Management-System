@@ -13,22 +13,21 @@
                     <span>User</span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="registeruser-admin.php">Register User</a></li>
-                    <li><a href="admin-manage-teacher.php">Teacher</a></li>
-                    <li><a href="admin-manage-student.php">Student</a></li>
+                    <li><a href="registeruser-admin.php">Register Student</a></li>
+                    <li><a href="admin-manage-teacher.php">Manage Teacher</a></li>
+                    <li><a href="admin-manage-student.php">Manage Student</a></li>
                 </ul>
             </li>
             <li>
-                <a href="admin-course-register.php">
+                <a href="admin-class-register.php">
                     <i class="fa-solid fa-book"></i>
-                    <span>Course</span>
+                    <span>Create Class</span>
                 </a>
             </li>
             <li class="dropdown">
-                <a href="list-of-class.php">
+                <a href="admin-create-subject.php">
                     <i class="fa-solid fa-pencil"></i>
-                    <span>Attendance</span>
-                    
+                    <span>Create Subject</span>
                 </a>
             </li>
             
