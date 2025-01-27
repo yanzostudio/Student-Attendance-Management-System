@@ -118,7 +118,7 @@ oci_close($conn);
             </select>
 
             <div class="form-buttons">
-                <a href="dashboard-teacher.php" class="cancel-btn">Cancel</a>
+                <a href="manage-attendance.php" class="cancel-btn">Cancel</a>
                 <button type="submit" id="add-course-btn" class="submit-btn">Add</button>
             </div>
         </form>
