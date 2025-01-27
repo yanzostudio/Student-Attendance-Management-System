@@ -45,9 +45,13 @@ if ($studentID) {
 // Handle class enrollment action
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $classID = $_POST['classID'];
-    $stmts = oci_parse($conn, "INSERT INTO enrolls (Student_ID, Class_ID) VALUES (:studentID, :classID)");
+    $currentTime = date('Y-m-d H:i:s'); // Get the current date and time
+
+    $stmts = oci_parse($conn, "INSERT INTO enrolls (Student_ID, Class_ID, ENROLLS_TIME) VALUES (:studentID, :classID, TO_DATE(:enrollsTime, 'YYYY-MM-DD HH24:MI:SS'))");
     oci_bind_by_name($stmts, ":studentID", $studentID);
     oci_bind_by_name($stmts, ":classID", $classID);
+    oci_bind_by_name($stmts, ":enrollsTime", $currentTime);
+
     if (oci_execute($stmts)) {
         header('Location: course-student.php');
         exit;
@@ -56,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     oci_free_statement($stmts);
 }
+
 oci_close($conn); // Close the connection
 ?>
 
