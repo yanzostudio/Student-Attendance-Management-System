@@ -16,6 +16,7 @@
                     <li><a href="registeruser-admin.php">Register Student</a></li>
                     <li><a href="registerstaff-admin.php">Register Staff</a></li>
                     <li><a href="admin-manage-student.php">Manage Student</a></li>
+                    <li><a href="admin-manage-staff.php">View Staff</a></li>
                 </ul>
             </li>
             <li>
