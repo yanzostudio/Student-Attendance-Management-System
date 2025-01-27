@@ -1,4 +1,4 @@
-<?php 
+<?php  
 require 'db_config.php'; // Database connection
 session_start();
 
@@ -9,22 +9,29 @@ if (!isset($_SESSION['studentID'])) {
 
 $studentID = $_SESSION['studentID'];
 
+// Oracle Database connection
+$conn = oci_connect($username, $password, $servername);
+if (!$conn) {
+    $e = oci_error();
+    die("Oracle Connection failed: " . $e['message']);
+}
+
 // Query to fetch attendance records
-$sql = "SELECT a.AttendanceID, a.dateTime, a.AttendanceStatus, s.StudentID, c.ClassName, co.CourseName
-FROM attendance a
-JOIN student s ON a.StudentID = s.StudentID
-JOIN class c ON a.ClassID = c.ClassID
-JOIN course co ON c.CourseID = co.courseID
-WHERE s.StudentID = ?
-ORDER BY a.dateTime DESC;";
+$sql = "SELECT a.CLASS_ID, a.ATTENDANCE_TIME, a.ATTENDED, s.STUDENT_ID, c.CLASS_NAME, c.CLASS_STARTTIME, c.CLASS_ENDTIME
+        FROM ATTENDANCE a
+        JOIN STUDENTS s ON a.STUDENT_ID = s.STUDENT_ID
+        JOIN CLASSES c ON a.CLASS_ID = c.CLASS_ID
+        WHERE s.STUDENT_ID = :studentID
+        ORDER BY a.ATTENDANCE_TIME DESC";
 
+// Prepare and execute query using Oracle functions
+$stid = oci_parse($conn, $sql);
+oci_bind_by_name($stid, ":studentID", $studentID);
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $studentID); // Use student ID from session
-$stmt->execute();
-$result = $stmt->get_result();
+oci_execute($stid);
 
-$conn->close();
+// Close connection
+oci_close($conn);
 ?>
 
 <!DOCTYPE html>
@@ -65,123 +72,104 @@ $conn->close();
                         <tr>
                             <th>Student ID</th>
                             <th>Class</th>
-                            <th>Course</th>
-                            <th>Date</th>
+                            <th>Class Start Time</th>
+                            <th>Class End Time</th>
                             <th>Attendance Status</th>
-                            <th>Take Attendance</th>
+                            <th>Mark Attendance</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($result->num_rows > 0): ?>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                                <tr id="row-<?= htmlspecialchars($row['StudentID']) ?>">
-                                    <td><?= htmlspecialchars($row['StudentID']) ?></td>
-                                    <td><?= htmlspecialchars($row['ClassName']) ?></td>
-                                    <td><?= htmlspecialchars($row['CourseName']) ?></td>
-                                    <td><?= date('d M Y', strtotime($row['dateTime'])) ?></td>
-                                    <td class="attendance-status"><?= $row['AttendanceStatus'] == 1 ? 'Present' : 'Absent' ?></td>
-                                    <td>
-    <?php if ($row['AttendanceStatus'] == 0): ?>
-        <button class="facial-scan" onclick="showFacialScanPopup('<?php echo htmlspecialchars($row['StudentID']); ?>', '<?php echo htmlspecialchars($row['AttendanceID']); ?>')">
-            <i class="fa-solid fa-camera"></i> Facial Scan
-        </button>
-    <?php else: ?>
-        <span class="success-icon">
-            <i class="fa-solid fa-check-circle"></i> Attended
-        </span>
-    <?php endif; ?>
-</td>
+                    <?php
+if ($row = oci_fetch_assoc($stid)): 
+    while ($row): 
+?>
+        <tr id="row-<?= htmlspecialchars($row['STUDENT_ID']) ?>">
+            <td><?= htmlspecialchars($row['STUDENT_ID']) ?></td>
+            <td><?= htmlspecialchars($row['CLASS_NAME']) ?></td>
+            <td><?= date('d M Y H:i', strtotime($row['CLASS_STARTTIME'])) ?></td>
+            <td><?= date('d M Y H:i', strtotime($row['CLASS_ENDTIME'])) ?></td>
+            <td class="attendance-status"><?= $row['ATTENDED'] == 'Y' ? 'Present' : 'Absent' ?></td>
+            <td>
+                <?php if ($row['ATTENDED'] == 'N'): ?>
+                    <button class="mark-attendance" onclick="markAttendance(<?= htmlspecialchars($row['STUDENT_ID']) ?>, <?= htmlspecialchars($row['CLASS_ID']) ?>)">
+                        <i class="fa-solid fa-check-circle"></i> Mark Attendance
+                    </button>
+                <?php else: ?>
+                    <span class="success-icon">
+                        <i class="fa-solid fa-check-circle"></i> Attended
+                    </span>
+                <?php endif; ?>
+            </td>
+        </tr>
+<?php 
+        $row = oci_fetch_assoc($stid); // Fetch the next row
+    endwhile;
+else: 
+?>
+    <tr>
+        <td colspan="6">No attendance records found.</td>
+    </tr>
+<?php endif; ?>
 
-
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6">No attendance records found.</td>
-                            </tr>
-                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div id="facial-scan-popup" class="popup-container">
+    <!-- Attendance Confirmation Popup -->
+    <div id="attendance-popup" class="popup-container">
         <div class="popup-content">
-            <video id="video" autoplay></video>
-            <p>Scanning your face... Please wait.</p>
+            <p>Attendance successfully marked! Thank you.</p>
+            <button onclick="closePopup()">Close</button>
         </div>
     </div>
 
     <script>
-        const video = document.getElementById("video");
+        function markAttendance(studentID, classID) {
+    // Send request to update the attendance in the database
+    fetch("update-attendance.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentID: studentID, classID: classID }),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        if (data.status === "success") {
+            // Mark attendance as present on the page
+            const row = document.getElementById(`row-${studentID}`);
+            if (row) {
+                row.querySelector(".attendance-status").textContent = "Present";
+                row.querySelector("td:last-child").innerHTML = `
+                    <span class="success-icon">
+                        <i class="fa-solid fa-check-circle"></i> Attended
+                    </span>
+                `;
+            }
 
-        function showFacialScanPopup(studentID, attendanceID) {
-    const popup = document.getElementById("facial-scan-popup");
-    popup.style.display = "flex";
-
-    // Start camera
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-            video.srcObject = stream;
-            startMockFacialRecognition(studentID, attendanceID, stream);
-        })
-        .catch((err) => {
-            console.error("Error accessing the camera:", err);
-            alert("Unable to access the camera.");
-        });
-}
-
-function startMockFacialRecognition(studentID, attendanceID, stream) {
-    setTimeout(() => {
-        // Stop the camera feed
-        stream.getTracks().forEach((track) => track.stop());
-        document.getElementById("facial-scan-popup").style.display = "none";
-
-        // Simulate marking attendance
-        fetch("mock-update-attendance.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ studentID: studentID, attendanceID: attendanceID }),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.status === "success") {
-                    console.log("Received data:", data);
-                    console.log("Looking for row:", `row-${attendanceID}`);
-
-                    // Attempt to find the row
-                    const row = document.getElementById(`row-${attendanceID}`) || document.getElementById(`row-${studentID}`);
-                    if (row) {
-                        row.querySelector(".attendance-status").textContent = "Present";
-                        row.querySelector("td:last-child").innerHTML = `
-                            <span class="success-icon">
-                                <i class="fa-solid fa-check-circle"></i> Attended
-                            </span>
-                        `;
-
-                        // Show alert and refresh the page after alert
-                        alert("Facial scan successful. Attendance marked!");
-                        location.reload(); // Refresh the page immediately after the alert is dismissed
-                    } else {
-                        console.error("Row not found for either attendanceID or studentID.");
-                    }
-                } else {
-                    alert("Failed to update attendance: " + data.message);
-                }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert("Error updating attendance.");
-            });
-    }, 2000); // Simulated 2-second scan
+            // Show popup message and refresh the page
+            showPopup();
+        } else {
+            alert("Failed to mark attendance: " + data.message);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert("Error updating attendance.");
+    });
 }
 
 
+        function showPopup() {
+            const popup = document.getElementById("attendance-popup");
+            popup.style.display = "flex";
+        }
 
-
-
-
+        function closePopup() {
+            const popup = document.getElementById("attendance-popup");
+            popup.style.display = "none";
+            location.reload(); // Refresh the page
+        }
     </script>
 </body>
 </html>
