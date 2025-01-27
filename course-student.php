@@ -77,7 +77,7 @@ oci_close($conn); // Close the connection
                 <span>Student</span>
                 <h2>Enroll Class</h2>
             </div>
-            <img src="images/student-icon2.jpg" alt="">
+            <img src="images/student-icon2.jpg" alt="" width="50px" height="50px">
         </div>
         
         <div class="container">
