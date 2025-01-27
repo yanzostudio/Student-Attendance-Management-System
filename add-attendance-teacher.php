@@ -1,61 +1,75 @@
-<?php 
-    require 'db_config.php'; // Ensure proper connection
-    session_start();
+<?php
+require 'db_config.php'; // Ensure Oracle DB connection
+session_start();
 
-    // Check if the user is logged in
-    if ($_SESSION['teacherID'] == null) {
-        header("Location: login.php");
-        exit();
+// Check if the user is logged in
+if (!isset($_SESSION['teacherID'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$teacherID = $_SESSION['teacherID'];
+
+// Fetch all classes assigned to the teacher
+$query = "SELECT CLASS_ID, CLASS_NAME FROM CLASSES WHERE TEACHER_ID = :teacherID";
+$stmt = oci_parse($conn, $query);
+oci_bind_by_name($stmt, ":teacherID", $teacherID);
+oci_execute($stmt);
+
+$classes = [];
+while ($row = oci_fetch_assoc($stmt)) {
+    $classes[] = $row;
+}
+oci_free_statement($stmt);
+
+$successMessage = ''; // Variable to store success message
+$errorMessage = '';   // Variable to store error message
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Get form data
+    $ClassID = $_POST['classid'];
+    $dateTime = $_POST['dateTime'];
+
+    // Get all students enrolled in the selected class
+    $enrollQuery = "SELECT STUDENT_ID FROM ENROLLS WHERE CLASS_ID = :classID";
+    $stmt = oci_parse($conn, $enrollQuery);
+    oci_bind_by_name($stmt, ":classID", $ClassID);
+    oci_execute($stmt);
+
+    $students = [];
+    while ($row = oci_fetch_assoc($stmt)) {
+        $students[] = $row['STUDENT_ID'];
     }
+    oci_free_statement($stmt);
 
-    $query = "SELECT * FROM class WHERE TeacherID = " . $_SESSION['teacherID'] . ";";
-    $result = mysqli_query($conn, $query);
+    // Check if there are students enrolled in this class
+    if (count($students) > 0) {
+        $attendanceQuery = "INSERT INTO ATTENDANCE (CLASS_ID, STUDENT_ID, ATTENDANCE_TIME, ATTENDED) VALUES (:classID, :studentID, TO_DATE(:dateTime, 'YYYY-MM-DD\"T\"HH24:MI'), 'Y')";
+        $attendanceStmt = oci_parse($conn, $attendanceQuery);
 
-    $successMessage = ''; // Variable to store success message
-    $errorMessage = '';   // Variable to store error message
+        foreach ($students as $studentID) {
+            oci_bind_by_name($attendanceStmt, ":classID", $ClassID);
+            oci_bind_by_name($attendanceStmt, ":studentID", $studentID);
+            oci_bind_by_name($attendanceStmt, ":dateTime", $dateTime);
 
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        // Get form data
-        $ClassID = $_POST['classid'];
-        $dateTime = $_POST['dateTime'];
-
-        // Get all students enrolled in the selected class
-        $enrollQuery = "SELECT StudentID FROM enroll WHERE ClassID = ?";
-        $stmt = $conn->prepare($enrollQuery);
-        $stmt->bind_param("i", $ClassID); // Assuming ClassID is an integer
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        // Check if there are students enrolled in this class
-        if ($result->num_rows > 0) {
-            // Loop through each student and insert them into the attendance table
-            $attendanceQuery = "INSERT INTO attendance (dateTime, StudentID, ClassID) VALUES (?, ?, ?)";
-            $attendanceStmt = $conn->prepare($attendanceQuery);
-            $attendanceStmt->bind_param("sii", $dateTime, $studentID, $ClassID);
-
-            // Loop through the result and insert each student into the attendance table
-            while ($row = $result->fetch_assoc()) {
-                $studentID = $row['StudentID'];
-                if (!$attendanceStmt->execute()) {
-                    $errorMessage = "Error inserting attendance for student ID " . $studentID . ": " . $attendanceStmt->error;
-                }
+            if (!oci_execute($attendanceStmt)) {
+                $e = oci_error($attendanceStmt);
+                $errorMessage = "Error inserting attendance for student ID " . $studentID . ": " . $e['message'];
+                break;
             }
-
-            if (!$errorMessage) {
-                // Set success message if no errors occurred
-                $successMessage = 'Attendance added successfully!';
-            }
-
-            // Close statements
-            $attendanceStmt->close();
-            $stmt->close();
-        } else {
-            $errorMessage = "No students enrolled in this class.";
         }
 
-        // Close the connection
-        $conn->close();
+        if (empty($errorMessage)) {
+            $successMessage = 'Attendance added successfully!';
+        }
+
+        oci_free_statement($attendanceStmt);
+    } else {
+        $errorMessage = "No students enrolled in this class.";
     }
+}
+
+oci_close($conn);
 ?>
 
 <!DOCTYPE html>
@@ -68,61 +82,56 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    
 <?php require 'sidebar-teacher.php'; ?>
 
-    <div class="main-content">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <span>Teacher</span>
-                <h2>Add Attendance</h2>
-            </div>
-            <img src="images/teacher.png">
+<div class="main-content">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <span>Teacher</span>
+            <h2>Add Attendance</h2>
         </div>
-
-        <div class="container">
-            <h3 class="main-title">Add a New Attendance</h3>
-
-            <!-- Notification Message -->
-            <?php if (!empty($successMessage)) : ?>
-                <div class="notification-message success"><?php echo $successMessage; ?></div>
-            <?php elseif (!empty($errorMessage)) : ?>
-                <div class="notification-message error"><?php echo $errorMessage; ?></div>
-            <?php endif; ?>
-
-            <form id="add-attendance-form" class="add-course-form" method="POST" action="add-attendance-teacher.php">
-                <label for="dateTime">(Date and Time):</label>
-                <input type="datetime-local" id="dateTime" name="dateTime" required>
-                
-                <label for="classid">Class ID:</label>
-                <select id="classid" name="classid" required>
-                    <option value="" disabled selected>Select Class</option>
-                    <?php
-                    if (mysqli_num_rows($result) > 0) {
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            echo "<option value='" . $row['ClassID'] . "'>" . $row['ClassName'] . "</option>";
-                        }
-                    } else {
-                        echo "<option value='' disabled>No classes available</option>";
-                    }
-                    ?>
-                </select>
-
-                <div class="form-buttons">
-                    <a href="dashboard-teacher.php" class="cancel-btn">Cancel</a>
-                    <button type="submit" id="add-course-btn" class="submit-btn">Add</button>
-                </div>
-            </form>
-        </div>
+        <img src="images/teacher.png">
     </div>
 
-    <!-- JavaScript to handle datetime input -->
-    <script>
-        // Get the current date and time in the required format
-        const currentDateTime = new Date().toISOString().slice(0, 16);
-        
-        // Set the 'min' attribute of the datetime-local input field
-        document.getElementById('dateTime').setAttribute('min', currentDateTime);
-    </script>
+    <div class="container">
+        <h3 class="main-title">Add a New Attendance</h3>
+
+        <!-- Notification Message -->
+        <?php if (!empty($successMessage)) : ?>
+            <div class="notification-message success"><?php echo $successMessage; ?></div>
+        <?php elseif (!empty($errorMessage)) : ?>
+            <div class="notification-message error"><?php echo $errorMessage; ?></div>
+        <?php endif; ?>
+
+        <form id="add-attendance-form" class="add-course-form" method="POST" action="add-attendance-teacher.php">
+            <label for="dateTime">(Date and Time):</label>
+            <input type="datetime-local" id="dateTime" name="dateTime" required>
+            
+            <label for="classid">Class ID:</label>
+            <select id="classid" name="classid" required>
+                <option value="" disabled selected>Select Class</option>
+                <?php
+                foreach ($classes as $class) {
+                    echo "<option value='" . htmlspecialchars($class['CLASS_ID']) . "'>" . htmlspecialchars($class['CLASS_NAME']) . "</option>";
+                }
+                ?>
+            </select>
+
+            <div class="form-buttons">
+                <a href="dashboard-teacher.php" class="cancel-btn">Cancel</a>
+                <button type="submit" id="add-course-btn" class="submit-btn">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript to handle datetime input -->
+<script>
+    // Get the current date and time in the required format
+    const currentDateTime = new Date().toISOString().slice(0, 16);
+    
+    // Set the 'min' attribute of the datetime-local input field
+    document.getElementById('dateTime').setAttribute('min', currentDateTime);
+</script>
 </body>
 </html>
