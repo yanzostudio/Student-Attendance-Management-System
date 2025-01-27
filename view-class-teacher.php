@@ -1,7 +1,7 @@
 <?php
 require 'db_config.php'; // Ensure proper connection
 session_start();
-if (($_SESSION['teacherID']) == null) {
+if ($_SESSION['teacherID'] == null) {
     header("Location: login.php");
     exit();
 }
@@ -12,35 +12,35 @@ $classID = $_GET['classID'] ?? null;
 // Fetch class and student data
 $classData = [];
 $students = [];
+
 if ($classID) {
     // Fetch class details
-    $classQuery = $conn->prepare("SELECT * FROM class WHERE ClassID = ?");
-    if ($classQuery) {
-        $classQuery->bind_param('i', $classID);
-        $classQuery->execute();
-        $classResult = $classQuery->get_result();
-        if ($classResult->num_rows > 0) {
-            $classData = $classResult->fetch_assoc();
-        }
+    $classQuery = "SELECT * FROM CLASSES WHERE CLASS_ID = :classID";
+    $classStmt = oci_parse($conn, $classQuery);
+    oci_bind_by_name($classStmt, ':classID', $classID);
+
+    if (oci_execute($classStmt)) {
+        $classData = oci_fetch_assoc($classStmt);
     }
+    oci_free_statement($classStmt);
 
     // Fetch students in the class
-    $studentQuery = $conn->prepare("
-        SELECT s.StudentID, s.username, a.AttendanceStatus
-        FROM enroll e
-        JOIN student s ON e.StudentID = s.StudentID
-        LEFT JOIN attendance a ON a.StudentID = s.StudentID AND a.ClassID = e.ClassID
-        WHERE e.ClassID = ?
-    ");
-    if ($studentQuery) {
-        $studentQuery->bind_param('i', $classID);
-        $studentQuery->execute();
-        $studentResult = $studentQuery->get_result();
-        while ($row = $studentResult->fetch_assoc()) {
+    $studentQuery = "
+        SELECT s.STUDENT_ID, s.STUDENT_NAME, a.ATTENDED AS ATTENDANCE_STATUS
+        FROM ENROLLS e
+        JOIN STUDENTS s ON e.STUDENT_ID = s.STUDENT_ID
+        LEFT JOIN ATTENDANCE a ON a.STUDENT_ID = s.STUDENT_ID AND a.CLASS_ID = e.CLASS_ID
+        WHERE e.CLASS_ID = :classID
+    ";
+    $studentStmt = oci_parse($conn, $studentQuery);
+    oci_bind_by_name($studentStmt, ':classID', $classID);
+
+    if (oci_execute($studentStmt)) {
+        while ($row = oci_fetch_assoc($studentStmt)) {
             $students[] = $row;
         }
-        $studentQuery->close();
     }
+    oci_free_statement($studentStmt);
 }
 ?>
 <!DOCTYPE html>
@@ -65,7 +65,7 @@ if ($classID) {
             
             <div class="tabular-wrapper">
                 <h3 class="main-title">
-                    <?= htmlspecialchars($classData['ClassName'] ?? 'Unknown Class') ?>
+                    <?= htmlspecialchars($classData['CLASS_NAME'] ?? 'Unknown Class') ?>
                 </h3>
                 <div class="table-container">
                     <table>
@@ -82,11 +82,11 @@ if ($classID) {
                                 <?php foreach ($students as $index => $student): ?>
                                     <tr>
                                         <td><?= $index + 1 ?></td>
-                                        <td><?= htmlspecialchars($student['username']) ?></td>
-                                        <td><?= htmlspecialchars($student['StudentID']) ?></td>
+                                        <td><?= htmlspecialchars($student['STUDENT_NAME']) ?></td>
+                                        <td><?= htmlspecialchars($student['STUDENT_ID']) ?></td>
                                         <td>
                                             <span>
-                                                <?= $student['AttendanceStatus'] == 1 ? 'Present' : 'Absent' ?>
+                                                <?= $student['ATTENDANCE_STATUS'] == 1 ? 'Present' : 'Absent' ?>
                                             </span>
                                         </td>
                                     </tr>
@@ -102,15 +102,11 @@ if ($classID) {
 
                 <div class="button-container">
                     <a href="classes-teacher.php" class="btn return-btn">Return</a>
-                    <a href="generate-report-teacher.php?classID=<?= $classID ?>" class="btn report-btn">Generate Report</a>
                 </div>
             </div>
         </div>
     </body>
 </html>
 <?php
-if (isset($classQuery) && $classQuery instanceof mysqli_stmt) {
-    $classQuery->close();
-}
-$conn->close();
+oci_close($conn);
 ?>

@@ -1,51 +1,51 @@
-<?php
-    require 'db_config.php'; // Ensure proper connection
-    session_start();
+<?php 
+require 'db_config.php'; // Ensure proper connection
+session_start();
 
-    // Check if the teacher is logged in
-    if (!isset($_SESSION['teacherID'])) {
-        header("Location: login.php");
-        exit();
-    }
+// Check if the teacher is logged in
+if (!isset($_SESSION['teacherID'])) {
+    header("Location: login.php");
+    exit();
+}
 
-    $teacherID = $_SESSION['teacherID'];
-    $successMessage = '';
+$teacherID = $_SESSION['teacherID'];
+$successMessage = '';
 
-    // Handle deletion if the delete action is triggered
-    if (isset($_GET['delete']) && isset($_GET['classID'])) {
-        $classID = intval($_GET['classID']); // Sanitize input
+// Handle deletion if the delete action is triggered
+if (isset($_GET['delete']) && isset($_GET['classID'])) {
+    $classID = $_GET['classID']; // Sanitize input
 
-        // Check if the class belongs to the teacher
-        $checkQuery = "SELECT * FROM class WHERE ClassID = ? AND TeacherID = ?";
-        $stmt = $conn->prepare($checkQuery);
-        $stmt->bind_param("ii", $classID, $teacherID);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    // Check if the class belongs to the teacher
+    $checkQuery = "SELECT * FROM CLASSES WHERE CLASS_ID = :classID AND TEACHER_ID = :teacherID";
+    $stmt = oci_parse($conn, $checkQuery);
+    oci_bind_by_name($stmt, ":classID", $classID);
+    oci_bind_by_name($stmt, ":teacherID", $teacherID);
+    oci_execute($stmt);
 
-        if ($result->num_rows > 0) {
-            // Proceed with deletion
-            $deleteQuery = "DELETE FROM class WHERE ClassID = ?";
-            $stmt = $conn->prepare($deleteQuery);
-            $stmt->bind_param("i", $classID);
+    if ($row = oci_fetch_assoc($stmt)) {
+        // Proceed with deletion
+        $deleteQuery = "DELETE FROM CLASSES WHERE CLASS_ID = :classID";
+        $deleteStmt = oci_parse($conn, $deleteQuery);
+        oci_bind_by_name($deleteStmt, ":classID", $classID);
 
-            if ($stmt->execute()) {
-                $successMessage = "Class deleted successfully.";
-            } else {
-                $successMessage = "Error deleting class.";
-            }
+        if (oci_execute($deleteStmt)) {
+            $successMessage = "Class deleted successfully.";
         } else {
-            $successMessage = "Unauthorized action.";
+            $successMessage = "Error deleting class.";
         }
-
-        $stmt->close();
+        oci_free_statement($deleteStmt);
+    } else {
+        $successMessage = "Unauthorized action.";
     }
 
-    // Query to fetch classes for the logged-in teacher
-    $sql = "SELECT ClassID, ClassName FROM class WHERE TeacherID = ? ORDER BY ClassID DESC";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $teacherID);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    oci_free_statement($stmt);
+}
+
+// Query to fetch classes for the logged-in teacher
+$sql = "SELECT CLASS_ID, CLASS_NAME FROM CLASSES WHERE TEACHER_ID = :teacherID ORDER BY CLASS_ID DESC";
+$stmt = oci_parse($conn, $sql);
+oci_bind_by_name($stmt, ":teacherID", $teacherID);
+oci_execute($stmt);
 ?>
 
 <!DOCTYPE html>
@@ -92,9 +92,7 @@
                 <?php endif; ?>
 
                 <div class="table-container">
-                    <div class="add-course-container">
-                        <a href="add-class-teacher.php" class="add-course-btn">Add New Class</a>
-                    </div>
+                    
                     <table>
                         <thead>
                             <tr>
@@ -106,17 +104,16 @@
                         <tbody>
                             <?php
                                 $counter = 1;
-                                while ($row = $result->fetch_assoc()) {
+                                while ($row = oci_fetch_assoc($stmt)) {
                                     echo "<tr>
                                         <td>" . $counter++ . "</td>
-                                        <td>" . htmlspecialchars($row['ClassName']) . "</td>
+                                        <td>" . htmlspecialchars($row['CLASS_NAME']) . "</td>
                                         <td>
-                                            <a href='view-class-teacher.php?classID=" . $row['ClassID'] . "'>View</a> | 
-                                            <a href='classes-teacher.php?delete=true&classID=" . $row['ClassID'] . "' 
-                                               onclick='return confirm(\"Are you sure you want to delete this class?\")'>Delete</a>
+                                            <a href='view-class-teacher.php?classID=" . $row['CLASS_ID'] . "'>View</a> 
                                         </td>
                                     </tr>";
                                 }
+                                oci_free_statement($stmt);
                             ?>
                         </tbody>
                     </table>
