@@ -44,16 +44,7 @@ oci_close($conn);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="sidebar">
-        <div class="logo"></div>
-        <ul class="menu">
-            <li><a href="dashboard-student.php"><i class="fa-solid fa-house-user"></i> <span>Homepage</span></a></li>
-            <li class="active"><a href="attendance-student.php"><i class="fa-regular fa-calendar-days"></i> <span>Attendance</span></a></li>
-            <li><a href="classes-student.php"><i class="fa-solid fa-users"></i> <span>Classes</span></a></li>
-            <li><a href="course-student.php"><i class="fa-solid fa-book"></i> <span>Course</span></a></li>
-            <li class="logout"><a href="login.php"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
-        </ul>
-    </div>
+<?php require 'sidebar-student.php'; ?>
 
     <div class="main-content">
         <div class="header-wrapper">
