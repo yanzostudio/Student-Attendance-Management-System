@@ -7,6 +7,12 @@
     <title>STUDENT ATTENDANCE MANAGEMENT SYSTEM</title>
     <link rel="stylesheet" href="css/login-page-styles.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        body {
+            background: url('/images/aisams_bg.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
 </head>
 <body>
 <div class="container">

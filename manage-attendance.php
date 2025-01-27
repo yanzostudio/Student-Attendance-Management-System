@@ -113,6 +113,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_date']) && iss
         <div class="add-course-container">
             <a href="add-attendance-teacher.php" class="add-attendance-button">Add Attendance</a>
         </div>
+        <style>
+            .red-button {
+                background-color: red;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                transition: background-color 0.3s ease;
+            }
+
+            .red-button:hover {
+                background-color: darkred;
+            }
+        </style>
 
         <form method="GET" action="manage-attendance.php">
             <label for="classid">Class:</label>
@@ -147,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_date']) && iss
     <h3>Attendance Records</h3>
     <form method="POST" action="manage-attendance.php?classid=<?= htmlspecialchars($_GET['classid']) ?>">
         <input type="hidden" name="delete_date" value="<?= htmlspecialchars($_GET['date']) ?>">
-        <button type="submit" onclick="return confirm('Are you sure you want to delete all attendance records for this date?');">Delete Attendance</button>
+        <button type="submit" class="red-button" onclick="return confirm('Are you sure you want to delete all attendance records for this date?');">Delete Attendance</button>
     </form>
     <table>
         <thead>
