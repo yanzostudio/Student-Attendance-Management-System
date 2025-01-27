@@ -1,38 +1,13 @@
 <?php
-// Database configuration
-$host = '127.0.0.1';
-$username = 'root';
-$password = ''; // Replace with your database password
-$dbname = 'sams_db';
+require 'db_config.php';
 
-// Create a connection
-$conn = new mysqli($host, $username, $password, $dbname);
+// Fetch admin data (total users)
+$adminQuery = "SELECT COUNT(*) AS total_users FROM administrators";
+$adminResult = oci_parse($conn, $adminQuery);
+oci_execute($adminResult);
+$row = oci_fetch_assoc($adminResult);
+$totalUsers = $row['TOTAL_USERS'];  // Oracle returns column names in uppercase by default
 
-// Check the connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Fetch admin data
-$adminQuery = "SELECT COUNT(*) AS total_users FROM admins";
-$adminResult = $conn->query($adminQuery);
-$totalUsers = $adminResult->fetch_assoc()['total_users'];
-
-// Fetch attendance statistics
-$attendanceQuery = "SELECT c.ClassName, COUNT(a.AttendanceID) AS count, 
-                            ROUND((COUNT(a.AttendanceID) / (
-                                SELECT COUNT(*) FROM attendance WHERE ClassID = c.ClassID
-                            )) * 100, 2) AS percentage
-                     FROM attendance a
-                     JOIN class c ON a.ClassID = c.ClassID
-                     GROUP BY c.ClassName";
-$attendanceResult = $conn->query($attendanceQuery);
-
-// Attendance data for table
-$attendanceData = [];
-while ($row = $attendanceResult->fetch_assoc()) {
-    $attendanceData[] = $row;
-}
 ?>
 
 <!DOCTYPE html>
@@ -89,34 +64,6 @@ while ($row = $attendanceResult->fetch_assoc()) {
                     </div>
                 </div>
 
-                <div class="table-container">
-                    <h2>Student Attendance Statistics Table Overview</h2>
-                    <table class="stats-table">
-                        <thead>
-                            <tr>
-                                <th>Class Name</th>
-                                <th>Count</th>
-                                <th>Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($attendanceData as $data): ?>
-                                <tr>
-                                    <td><?php echo $data['ClassName']; ?></td>
-                                    <td><?php echo $data['count']; ?></td>
-                                    <td><?php echo $data['percentage']; ?>%</td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td>Total</td>
-                                <td><?php echo array_sum(array_column($attendanceData, 'count')); ?></td>
-                                <td>100%</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
             </div>
         </div>
     </div>
@@ -124,5 +71,7 @@ while ($row = $attendanceResult->fetch_assoc()) {
 </html>
 
 <?php
-$conn->close();
+// Free Oracle resources and close the connection
+oci_free_statement($adminResult);
+oci_close($conn);
 ?>

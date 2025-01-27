@@ -31,7 +31,7 @@
                 </div>
 
                 <div class="input-box">
-                    <input type="text" name="username" class="input-field" placeholder="Username">
+                    <input type="text" name="email" class="input-field" placeholder="email">
                     <i class="bx bx-user"></i>
                 </div>
             
@@ -63,47 +63,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("Connection failed: " . $e['message']);
     }
 
-    if (!empty($_POST['username']) && !empty($_POST['password'])) {
-        $username = $_POST['username'];
+    if (!empty($_POST['email']) && !empty($_POST['password'])) {
+        $email = $_POST['email'];
         $password = $_POST['password'];
         $type = $_POST['type'];
 
         // Query the appropriate table based on user type
         if ($type == "student") {
-            $query = "SELECT * FROM students WHERE STUDENT_NAME = :username";
+            $query = "SELECT * FROM students WHERE STUDENT_EMAIL = :email";
         } else if ($type == "teacher") {
-            $query = "SELECT * FROM teacher WHERE username = :username";
+            $query = "SELECT * FROM staffs  WHERE STAFF_EMAIL = :email";
         } else if ($type == "admin") {
-            $query = "SELECT * FROM admins WHERE username = :username";
+            $query = "SELECT * FROM staffs  WHERE STAFF_EMAIL = :email";
         }
 
         $stmt = oci_parse($conn, $query);
-        oci_bind_by_name($stmt, ":username", $username);
+        oci_bind_by_name($stmt, ":email", $email);
         oci_execute($stmt);
 
         $row = oci_fetch_assoc($stmt);
         if ($row) {
-            // Direct password comparison (no hashing involved)
+            session_start();
+            if ($type == "student") {
             if ($password == $row['STUDENT_PASSWORD']) {
-                session_start();
-                if ($type == "student") {
+                
+                
                     $_SESSION['studentID'] = $row['STUDENT_ID'];
-                    header('Location: dashboard-student.php');
+                header('Location: dashboard-student.php');
                     exit();
-                } else if ($type == "teacher") {
-                    $_SESSION['teacherID'] = $row['TEACHERID'];
-                    header('Location: dashboard-teacher.php');
-                    exit();
-                } else if ($type == "admin") {
-                    $_SESSION['AdminID'] = $row['ADMINID'];
-                    header('Location: dashboard-admin.php');
-                    exit();
+                }else {
+                    echo "<script>alert('Invalid password.');</script>";
                 }
-            } else {
-                echo "<script>alert('Invalid password.');</script>";
+                
+            }
+            else if($type == "teacher" || $type == "admin"){
+                if ($password == $row['STAFF_PASSWORD']) {
+
+                    if ($type == "teacher") {
+                        $_SESSION['teacherID'] = $row['STAFF_ID'];
+                        header('Location: dashboard-teacher.php');
+                        exit();
+                    } else if ($type == "admin") {
+                        $_SESSION['AdminID'] = $row['STAFF_ID'];
+                        header('Location: dashboard-admin.php');
+                        exit();
+                    }
+                }else {
+                    echo "<script>alert('Invalid password.');</script>";
+                }
             }
         } else {
-            echo "<script>alert('Invalid username.');</script>";
+            echo "<script>alert('Invalid email.');</script>";
         }
 
         oci_free_statement($stmt);

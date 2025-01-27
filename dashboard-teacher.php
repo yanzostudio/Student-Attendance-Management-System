@@ -1,30 +1,28 @@
 <?php
-    require 'db_config.php';
-    session_start();
+require 'db_config.php';
+session_start();
 
-    // Check if the teacher is logged in
-    if (!isset($_SESSION['teacherID'])) {
-        header("Location: login.php");
-        exit();
-    }
+// Check if the teacher is logged in
+if (!isset($_SESSION['teacherID'])) {
+    header("Location: login.php");
+    exit();
+}
 
-    $teacherID = $_SESSION['teacherID'];
+$teacherID = $_SESSION['teacherID'];
 
-    // Fetch teacher details
-    $query = "SELECT username, Email FROM teacher WHERE teacherID = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $teacherID);
-    $stmt->execute();
-    $result = $stmt->get_result();
+// Fetch teacher details
+$query = "SELECT STAFF_NAME, STAFF_EMAIL FROM STAFFS WHERE STAFF_ID = :teacherID";
+$stmt = oci_parse($conn, $query);
+oci_bind_by_name($stmt, ":teacherID", $teacherID);
+oci_execute($stmt);
 
-    if ($result->num_rows > 0) {
-        $teacher = $result->fetch_assoc();
-        $teacherName = $teacher['username'];
-        $teacherEmail = $teacher['Email'];
-    } else {
-        echo "Error fetching teacher details.";
-        exit();
-    }
+if ($row = oci_fetch_assoc($stmt)) {
+    $teacherName = $row['STAFF_NAME'];
+    $teacherEmail = $row['STAFF_EMAIL'];
+} else {
+    echo "Error fetching teacher details.";
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -95,7 +93,7 @@
     <div class="tabular--wrapper">
         <h3 class="main--title">List of Classes</h3>
         <div class="table-container">
-            <table>
+            <!-- <table>
                 <thead>
                     <tr>
                         <th>No</th>
@@ -108,34 +106,41 @@
                 </thead>
                 <tbody>
                 <?php
-                    $query = "SELECT c.ClassID, c.ClassName, cr.CourseCode, cr.CourseName, 
-                                     IFNULL(s.TimeSlot, 'TBA') AS TimeSlot
-                              FROM class c
-                              JOIN course cr ON c.CourseID = cr.CourseID
-                              LEFT JOIN schedule s ON c.ClassID = s.ClassID
-                              WHERE c.TeacherID = ?";
-                    $stmt = $conn->prepare($query);
-                    $stmt->bind_param("i", $teacherID);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
+                    $query = "
+                        SELECT c.ClassID, c.ClassName, cr.CourseCode, cr.CourseName, 
+                               NVL(s.TimeSlot, 'TBA') AS TimeSlot
+                        FROM class c
+                        JOIN course cr ON c.CourseID = cr.CourseID
+                        LEFT JOIN schedule s ON c.ClassID = s.ClassID
+                        WHERE c.TeacherID = :teacherID
+                    ";
+                    $stmt = oci_parse($conn, $query);
+                    oci_bind_by_name($stmt, ":teacherID", $teacherID);
+                    oci_execute($stmt);
 
                     $bil = 1;
-                    while ($row = $result->fetch_assoc()) {
+                    while ($row = oci_fetch_assoc($stmt)) {
                         echo "<tr>
                             <td>{$bil}</td>
-                            <td>{$row['ClassID']}</td>
-                            <td>{$row['ClassName']}</td>
-                            <td>{$row['CourseCode']}</td>
-                            <td>{$row['CourseName']}</td>
-                            <td>{$row['TimeSlot']}</td>
+                            <td>{$row['CLASSID']}</td>
+                            <td>{$row['CLASSNAME']}</td>
+                            <td>{$row['COURSECODE']}</td>
+                            <td>{$row['COURSENAME']}</td>
+                            <td>{$row['TIMESLOT']}</td>
                         </tr>";
                         $bil++;
                     }
                 ?>
                 </tbody>
-            </table>
+            </table> -->
         </div>
     </div>
 </div>
 </body>
 </html>
+
+<?php
+// Free Oracle resources and close the connection
+oci_free_statement($stmt);
+oci_close($conn);
+?>
