@@ -7,31 +7,37 @@ $studentID = $_SESSION['studentID']; // Get the student ID from session
 if ($studentID) {
     // Query to get the classes the student is already enrolled in
     $checkQuery = "
-    SELECT c.ClassID, c.ClassName
-    FROM class c
-    WHERE c.ClassID IN (
-        SELECT ClassID FROM enroll WHERE StudentID = ?
+    SELECT c.Class_ID, c.Class_Name
+    FROM classes c
+    WHERE c.Class_ID IN (
+        SELECT Class_ID FROM enrolls WHERE Student_ID = :studentID
     )
     ";
-    $stmt = $conn->prepare($checkQuery);
-    $stmt->bind_param('i', $studentID);
-    $stmt->execute();
-    $enrolledResult = $stmt->get_result(); // Store the result for enrolled classes
+    $stmt = oci_parse($conn, $checkQuery);
+    oci_bind_by_name($stmt, ":studentID", $studentID);
+    oci_execute($stmt);
+    $enrolledResult = [];
+    while ($row = oci_fetch_assoc($stmt)) {
+        $enrolledResult[] = $row; // Store the result for enrolled classes
+    }
 
     // Query to get the classes the student is NOT enrolled in
     $notEnrolledQuery = "
-    SELECT c.ClassID, c.ClassName
-    FROM class c
-    WHERE c.ClassID NOT IN (
-        SELECT ClassID FROM enroll WHERE StudentID = ?
+    SELECT c.Class_ID, c.Class_Name
+    FROM classes c
+    WHERE c.Class_ID NOT IN (
+        SELECT Class_ID FROM enrolls WHERE Student_ID = :studentID
     )
     ";
-    $stmt = $conn->prepare($notEnrolledQuery);
-    $stmt->bind_param('i', $studentID);
-    $stmt->execute();
-    $notEnrolledResult = $stmt->get_result(); // Store the result for non-enrolled classes
+    $stmt = oci_parse($conn, $notEnrolledQuery);
+    oci_bind_by_name($stmt, ":studentID", $studentID);
+    oci_execute($stmt);
+    $notEnrolledResult = [];
+    while ($row = oci_fetch_assoc($stmt)) {
+        $notEnrolledResult[] = $row; // Store the result for non-enrolled classes
+    }
 
-    $stmt->close(); // Close the statement
+    oci_free_statement($stmt); // Free the statement
 } else {
     $response['message'] = 'Invalid student ID.';
 }
@@ -39,17 +45,18 @@ if ($studentID) {
 // Handle class enrollment action
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $classID = $_POST['classID'];
-    $stmts = $conn->prepare("INSERT INTO enroll (StudentID, ClassID) VALUES (?, ?)");
-    $stmts->bind_param("ii", $studentID, $classID);
-    if ($stmts->execute()) {
+    $stmts = oci_parse($conn, "INSERT INTO enrolls (Student_ID, Class_ID) VALUES (:studentID, :classID)");
+    oci_bind_by_name($stmts, ":studentID", $studentID);
+    oci_bind_by_name($stmts, ":classID", $classID);
+    if (oci_execute($stmts)) {
         header('Location: course-student.php');
         exit;
     } else {
-        echo "Error: " . $stmts->error;
+        echo "Error: " . oci_error($stmts)['message'];
     }
-    $conn->close();
+    oci_free_statement($stmts);
 }
-$conn->close();
+oci_close($conn); // Close the connection
 ?>
 
 <!DOCTYPE html>
@@ -82,12 +89,12 @@ $conn->close();
                 <div class="enrolled-classes">
                     <h4>Enrolled Classes</h4>
                     <div class="class-list" id="enrolled">
-                        <?php if ($enrolledResult && $enrolledResult->num_rows > 0): ?>
-                            <?php while ($row = $enrolledResult->fetch_assoc()): ?>
+                        <?php if (!empty($enrolledResult)): ?>
+                            <?php foreach ($enrolledResult as $row): ?>
                                 <div class="class-item">
-                                    <h3><?php echo htmlspecialchars($row['ClassName']); ?></h3>
+                                    <h3><?php echo htmlspecialchars($row['CLASS_NAME']); ?></h3>
                                 </div>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         <?php else: ?>
                             <p>No classes enrolled yet.</p>
                         <?php endif; ?>
@@ -98,16 +105,16 @@ $conn->close();
                 <div class="not-enrolled-classes">
                     <h4>Classes Not Yet Enrolled</h4>
                     <div class="class-list" id="not-enrolled">
-                        <?php if ($notEnrolledResult && $notEnrolledResult->num_rows > 0): ?>
-                            <?php while ($row = $notEnrolledResult->fetch_assoc()): ?>
+                        <?php if (!empty($notEnrolledResult)): ?>
+                            <?php foreach ($notEnrolledResult as $row): ?>
                                 <div class="class-item">
-                                    <h3><?php echo htmlspecialchars($row['ClassName']); ?></h3>
+                                    <h3><?php echo htmlspecialchars($row['CLASS_NAME']); ?></h3>
                                 </div>
                                 <form action="course-student.php" method="POST">
-                                    <input type="hidden" name="classID" value="<?= $row['ClassID'] ?>">
+                                    <input type="hidden" name="classID" value="<?= $row['CLASS_ID'] ?>">
                                     <input type="submit" value="Enroll" class="register-btn">
                                 </form>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         <?php else: ?>
                             <p>All classes are enrolled.</p>
                         <?php endif; ?>
