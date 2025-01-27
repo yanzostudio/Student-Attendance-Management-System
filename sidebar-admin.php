@@ -25,7 +25,7 @@
                 </a>
             </li>
             <li class="dropdown">
-                <a href="admin-create-subject.php">
+                <a href="admin-subject-register.php">
                     <i class="fa-solid fa-pencil"></i>
                     <span>Create Subject</span>
                 </a>
