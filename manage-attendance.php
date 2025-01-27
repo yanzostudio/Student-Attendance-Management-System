@@ -21,50 +21,73 @@ while ($row = oci_fetch_assoc($classStmt)) {
 }
 oci_free_statement($classStmt);
 
-// Delete all attendance for a specific date and class
-if (isset($_POST['deleteAll']) && !empty($_POST['classid']) && !empty($_POST['dateTime'])) {
-    $classID = $_POST['classid'];
-    $dateTime = $_POST['dateTime'];
+// Fetch distinct dates with attendance records
+$dates = [];
+if (!empty($_GET['classid'])) {
+    $classID = $_GET['classid'];
 
-    $deleteAllQuery = "
-        DELETE FROM ATTENDANCE 
-        WHERE CLASS_ID = :classID 
-          AND ATTENDANCE_TIME = TO_DATE(:dateTime, 'YYYY-MM-DD')";
-    $deleteAllStmt = oci_parse($conn, $deleteAllQuery);
-    oci_bind_by_name($deleteAllStmt, ":classID", $classID);
-    oci_bind_by_name($deleteAllStmt, ":dateTime", $dateTime);
-    oci_execute($deleteAllStmt);
+    $dateQuery = "
+        SELECT DISTINCT TO_CHAR(ATTENDANCE_TIME, 'YYYY-MM-DD') AS ATTENDANCE_DATE 
+        FROM ATTENDANCE 
+        WHERE CLASS_ID = :classID
+        ORDER BY TO_DATE(TO_CHAR(ATTENDANCE_TIME, 'YYYY-MM-DD'), 'YYYY-MM-DD')";
+    $dateStmt = oci_parse($conn, $dateQuery);
+    oci_bind_by_name($dateStmt, ":classID", $classID);
+    oci_execute($dateStmt);
 
-    echo "<script>alert('All attendance records for the selected date and class have been deleted successfully!');</script>";
+    while ($row = oci_fetch_assoc($dateStmt)) {
+        $dates[] = $row['ATTENDANCE_DATE'];
+    }
+    oci_free_statement($dateStmt);
 }
 
-// Fetch attendance if class and date are selected
+// Fetch attendance records for a specific date
 $attendances = [];
-if (!empty($_GET['classid']) && !empty($_GET['dateTime'])) {
+if (!empty($_GET['classid']) && !empty($_GET['date'])) {
     $classID = $_GET['classid'];
-    $dateTime = $_GET['dateTime'];
+    $date = $_GET['date'];
 
     $attendanceQuery = "
         SELECT s.STUDENT_ID, s.STUDENT_NAME, 
-               NVL(TO_CHAR(a.ATTENDANCE_TIME, 'YYYY-MM-DD'), 'N/A') AS ATTENDANCE_TIME,
+               NVL(TO_CHAR(a.ATTENDANCE_TIME, 'YYYY-MM-DD HH24:MI:SS'), 'N/A') AS ATTENDANCE_TIME,
                CASE WHEN a.ATTENDED = 'Y' THEN 'Yes' ELSE 'No' END AS ATTENDED
         FROM STUDENTS s
         LEFT JOIN ATTENDANCE a ON s.STUDENT_ID = a.STUDENT_ID 
                               AND a.CLASS_ID = :classID 
-                              AND a.ATTENDANCE_TIME = TO_DATE(:dateTime, 'YYYY-MM-DD')
+                              AND TO_CHAR(a.ATTENDANCE_TIME, 'YYYY-MM-DD') = :attendanceDate
         WHERE s.STUDENT_ID IN (
             SELECT STUDENT_ID FROM ENROLLS WHERE CLASS_ID = :classID
         )
         ORDER BY s.STUDENT_ID";
     $stmt = oci_parse($conn, $attendanceQuery);
     oci_bind_by_name($stmt, ":classID", $classID);
-    oci_bind_by_name($stmt, ":dateTime", $dateTime);
+    oci_bind_by_name($stmt, ":attendanceDate", $date);
     oci_execute($stmt);
 
     while ($row = oci_fetch_assoc($stmt)) {
         $attendances[] = $row;
     }
     oci_free_statement($stmt);
+}
+
+// Handle delete action
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_date']) && isset($_GET['classid'])) {
+    $classID = $_GET['classid'];
+    $dateToDelete = $_POST['delete_date'];
+
+    $deleteQuery = "
+        DELETE FROM ATTENDANCE 
+        WHERE CLASS_ID = :classID 
+        AND TO_CHAR(ATTENDANCE_TIME, 'YYYY-MM-DD') = :dateToDelete";
+    $deleteStmt = oci_parse($conn, $deleteQuery);
+    oci_bind_by_name($deleteStmt, ":classID", $classID);
+    oci_bind_by_name($deleteStmt, ":dateToDelete", $dateToDelete);
+    oci_execute($deleteStmt);
+    oci_free_statement($deleteStmt);
+
+    // Redirect to avoid resubmission
+    header("Location: manage-attendance.php?classid=$classID");
+    exit();
 }
 ?>
 
@@ -101,43 +124,56 @@ if (!empty($_GET['classid']) && !empty($_GET['dateTime'])) {
                     </option>
                 <?php endforeach; ?>
             </select>
-
-            <label for="dateTime">Date:</label>
-            <input type="date" id="dateTime" name="dateTime" value="<?= htmlspecialchars($_GET['dateTime'] ?? '') ?>" required>
-
-            <button type="submit">View Attendance</button>
+            <button type="submit">View Dates</button>
         </form>
 
-        <?php if (!empty($attendances)): ?>
-            <form method="POST" action="manage-attendance.php">
-                <input type="hidden" name="classid" value="<?= htmlspecialchars($_GET['classid']) ?>">
-                <input type="hidden" name="dateTime" value="<?= htmlspecialchars($_GET['dateTime']) ?>">
-                <button type="submit" name="deleteAll" class="delete-all-button" onclick="return confirm('Are you sure you want to delete all attendance records for this class and date?')">Delete Attendance</button>
-            </form>
+        <?php if (!empty($dates) && empty($_GET['date'])): ?>
+    <h3>Date</h3>
+    <ul>
+        <?php foreach ($dates as $date): ?>
+            <li>
+                <a href="manage-attendance.php?classid=<?= htmlspecialchars($_GET['classid']) ?>&date=<?= htmlspecialchars($date) ?>">
+                    <?= htmlspecialchars($date) ?>
+                </a>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+<?php elseif (isset($_GET['classid']) && empty($dates)): ?>
+    <p>No attendance dates found for the selected class.</p>
+<?php endif; ?>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Student ID</th>
-                        <th>Student Name</th>
-                        <th>Attendance Time</th>
-                        <th>Attended</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($attendances as $attendance): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($attendance['STUDENT_ID']) ?></td>
-                            <td><?= htmlspecialchars($attendance['STUDENT_NAME']) ?></td>
-                            <td><?= htmlspecialchars($attendance['ATTENDANCE_TIME']) ?></td>
-                            <td><?= htmlspecialchars($attendance['ATTENDED']) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php elseif (isset($_GET['classid']) && isset($_GET['dateTime'])): ?>
-            <p>No attendance records found for the selected class and date.</p>
-        <?php endif; ?>
+<?php if (!empty($attendances)): ?>
+    <button onclick="window.location.href='manage-attendance.php?classid=<?= htmlspecialchars($_GET['classid']) ?>';">Back to Dates</button>
+    <h3>Attendance Records</h3>
+    <form method="POST" action="manage-attendance.php?classid=<?= htmlspecialchars($_GET['classid']) ?>">
+        <input type="hidden" name="delete_date" value="<?= htmlspecialchars($_GET['date']) ?>">
+        <button type="submit" onclick="return confirm('Are you sure you want to delete all attendance records for this date?');">Delete Attendance</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Attendance Time</th>
+                <th>Attended</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($attendances as $attendance): ?>
+                <tr>
+                    <td><?= htmlspecialchars($attendance['STUDENT_ID']) ?></td>
+                    <td><?= htmlspecialchars($attendance['STUDENT_NAME']) ?></td>
+                    <td><?= htmlspecialchars($attendance['ATTENDANCE_TIME']) ?></td>
+                    <td><?= htmlspecialchars($attendance['ATTENDED']) ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+<?php elseif (isset($_GET['date'])): ?>
+    <button onclick="window.location.href='manage-attendance.php?classid=<?= htmlspecialchars($_GET['classid']) ?>';">Back to Dates</button>
+    <p>No attendance records found for the selected date.</p>
+<?php endif; ?>
+
     </div>
 </body>
 </html>
