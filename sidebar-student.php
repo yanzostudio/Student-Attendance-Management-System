@@ -12,11 +12,6 @@
                     <i class="fa-regular fa-calendar-days"></i>
                     <span>Attendance</span>
                 </a>
-             </li><li  class="active">
-                <a href="classes-student.php">
-                    <i class="fa-solid fa-users"></i>
-                    <span>Classes</span>
-                </a>
              </li><li>
                 <a href="course-student.php">
                     <i class="fa-solid fa-book"></i>

@@ -14,7 +14,7 @@
                 </a>
                 <ul class="dropdown-menu">
                     <li><a href="registeruser-admin.php">Register Student</a></li>
-                    <li><a href="admin-manage-teacher.php">Manage Teacher</a></li>
+                    <li><a href="registerstaff-admin.php">Register Staff</a></li>
                     <li><a href="admin-manage-student.php">Manage Student</a></li>
                 </ul>
             </li>

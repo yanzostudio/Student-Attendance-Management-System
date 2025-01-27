@@ -15,12 +15,6 @@
                     </a>
                 </li>
                 <li>
-                    <a href="select-course-teacher.php">
-                        <i class="fa-solid fa-book"></i>
-                        <span>Course</span>
-                    </a>
-                </li>
-                <li>
                     <a href="manage-attendance.php">
                         <i class="fa-solid fa-square-check"></i>
                         <span>Attendance</span>
