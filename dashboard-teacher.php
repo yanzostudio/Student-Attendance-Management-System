@@ -10,6 +10,9 @@ if (!isset($_SESSION['teacherID'])) {
 
 $teacherID = $_SESSION['teacherID'];
 
+
+
+
 // Fetch teacher details
 $query = "SELECT STAFF_NAME, STAFF_EMAIL FROM STAFFS WHERE STAFF_ID = :teacherID";
 $stmt = oci_parse($conn, $query);
@@ -23,7 +26,15 @@ if ($row = oci_fetch_assoc($stmt)) {
     echo "Error fetching teacher details.";
     exit();
 }
+
+
+// Query to fetch classes for the logged-in teacher
+$sql = "SELECT CLASS_ID, CLASS_NAME FROM CLASSES WHERE TEACHER_ID = :teacherID ORDER BY CLASS_ID DESC";
+$stmt = oci_parse($conn, $sql);
+oci_bind_by_name($stmt, ":teacherID", $teacherID);
+oci_execute($stmt);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -93,46 +104,35 @@ if ($row = oci_fetch_assoc($stmt)) {
     <div class="tabular--wrapper">
         <h3 class="main--title">List of Classes</h3>
         <div class="table-container">
-            <!-- <table>
+            <table>
                 <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Class ID</th>
-                        <th>Class Name</th>
-                        <th>Course Code</th>
-                        <th>Course Name</th>
-                        <th>Schedule</th>
-                    </tr>
-                </thead>
-                <tbody>
+                            <tr>
+                                <th>Bil.</th>
+                                <th>Class</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                                $counter = 1;
+                                while ($row = oci_fetch_assoc($stmt)) {
+                                    echo "<tr>
+                                        <td>" . $counter++ . "</td>
+                                        <td>" . htmlspecialchars($row['CLASS_NAME']) . "</td>
+                                    </tr>";
+                                }
+                                oci_free_statement($stmt);
+                            ?>
+                        </tbody>
                 <?php
-                    $query = "
-                        SELECT c.ClassID, c.ClassName, cr.CourseCode, cr.CourseName, 
-                               NVL(s.TimeSlot, 'TBA') AS TimeSlot
-                        FROM class c
-                        JOIN course cr ON c.CourseID = cr.CourseID
-                        LEFT JOIN schedule s ON c.ClassID = s.ClassID
-                        WHERE c.TeacherID = :teacherID
-                    ";
+                    
                     $stmt = oci_parse($conn, $query);
                     oci_bind_by_name($stmt, ":teacherID", $teacherID);
                     oci_execute($stmt);
 
-                    $bil = 1;
-                    while ($row = oci_fetch_assoc($stmt)) {
-                        echo "<tr>
-                            <td>{$bil}</td>
-                            <td>{$row['CLASSID']}</td>
-                            <td>{$row['CLASSNAME']}</td>
-                            <td>{$row['COURSECODE']}</td>
-                            <td>{$row['COURSENAME']}</td>
-                            <td>{$row['TIMESLOT']}</td>
-                        </tr>";
-                        $bil++;
-                    }
+                   
                 ?>
                 </tbody>
-            </table> -->
+            </table> 
         </div>
     </div>
 </div>

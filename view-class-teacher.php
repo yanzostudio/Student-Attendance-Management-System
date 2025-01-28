@@ -26,10 +26,9 @@ if ($classID) {
 
     // Fetch students in the class
     $studentQuery = "
-        SELECT s.STUDENT_ID, s.STUDENT_NAME, a.ATTENDED AS ATTENDANCE_STATUS
+        SELECT s.STUDENT_ID, s.STUDENT_NAME, s.STUDENT_EMAIL
         FROM ENROLLS e
         JOIN STUDENTS s ON e.STUDENT_ID = s.STUDENT_ID
-        LEFT JOIN ATTENDANCE a ON a.STUDENT_ID = s.STUDENT_ID AND a.CLASS_ID = e.CLASS_ID
         WHERE e.CLASS_ID = :classID
     ";
     $studentStmt = oci_parse($conn, $studentQuery);
@@ -74,7 +73,7 @@ if ($classID) {
                                 <th>Bil.</th>
                                 <th>Name</th>
                                 <th>Student ID</th>
-                                <th>Verify Attendance</th>
+                                <th>Email</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -84,11 +83,7 @@ if ($classID) {
                                         <td><?= $index + 1 ?></td>
                                         <td><?= htmlspecialchars($student['STUDENT_NAME']) ?></td>
                                         <td><?= htmlspecialchars($student['STUDENT_ID']) ?></td>
-                                        <td>
-                                            <span>
-                                                <?= $student['ATTENDANCE_STATUS'] == 1 ? 'Present' : 'Absent' ?>
-                                            </span>
-                                        </td>
+                                        <td><?= htmlspecialchars($student['STUDENT_EMAIL']) ?>   </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
